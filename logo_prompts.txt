@@ -1,0 +1,15 @@
+# Logo Generation Prompts for "Vibe Check"
+
+Here are three distinct style options for your logo. You can copy and paste these directly into Midjourney, DALL-E 3, or any other AI image generator.
+
+## Option 1: Neon Minimalist (Modern & Tech-Focused)
+**Prompt:**
+> A sleek, modern app icon logo for a social party game called "Vibe Check". The design features a stylized, glowing neon pulse or sound wave forming a subtle "V" shape. The background is a deep, matte black. The neon colors are electric violet and hot pink gradient. Minimalist, vector art style, rounded corners, high contrast, suitable for a mobile app icon. --ar 1:1 --v 6.0
+
+## Option 2: Playful & Social (Fun & Character-Based)
+**Prompt:**
+> A fun, 3D bubbly logo for a game called "Vibe Check". The centerpiece is two cute, abstract avatars high-fiving or connecting, with a spark of energy between them. The colors are vibrant orange, purple, and teal. Soft studio lighting, 3D render style like Pixar, glossy texture, floating confetti in the background. --ar 1:1 --v 6.0
+
+## Option 3: Abstract Synergy (Mysterious & Cool)
+**Prompt:**
+> An abstract geometric logo representing connection and synergy. Two interlocking rings or fluid shapes merging together, shifting from cyan to magenta. The style is glassmorphism with soft transparency and blur effects. Dark background, futuristic, clean, elegant. The text "Vibe Check" appears below in a bold, sans-serif futuristic font. --ar 1:1 --v 6.0

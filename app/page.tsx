@@ -617,25 +617,31 @@ export default function Home() {
 
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-violet-300 uppercase tracking-wider ml-1">Create PIN</label>
+                      <label htmlFor="create-pin" className="text-xs font-bold text-violet-300 uppercase tracking-wider ml-1">Create PIN</label>
                       <input
+                        id="create-pin"
                         type="password"
                         placeholder="••••"
                         value={pinInput}
                         onChange={(e) => setPinInput(e.target.value)}
                         maxLength={4}
+                        inputMode="numeric"
+                        autoComplete="new-password"
                         className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 text-center font-mono text-xl tracking-widest focus:outline-none focus:border-violet-500/50 focus:bg-violet-500/5 transition-all"
                         autoFocus
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-violet-300 uppercase tracking-wider ml-1">Confirm PIN</label>
+                      <label htmlFor="confirm-pin" className="text-xs font-bold text-violet-300 uppercase tracking-wider ml-1">Confirm PIN</label>
                       <input
+                        id="confirm-pin"
                         type="password"
                         placeholder="••••"
                         value={confirmPinInput}
                         onChange={(e) => setConfirmPinInput(e.target.value)}
                         maxLength={4}
+                        inputMode="numeric"
+                        autoComplete="new-password"
                         className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 text-center font-mono text-xl tracking-widest focus:outline-none focus:border-violet-500/50 focus:bg-violet-500/5 transition-all"
                       />
                     </div>
