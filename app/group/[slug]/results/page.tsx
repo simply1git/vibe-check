@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import questionsData from '@/lib/questions.json'
-import { Copy, MessageCircle, Crown, Award, RefreshCw, Lock, ArrowLeft, Share2, Zap } from 'lucide-react'
+import { Copy, MessageCircle, Crown, Award, RefreshCw, Lock, ArrowLeft, Share2, Zap, User } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { motion } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
 import UserMenu from '@/components/UserMenu'
+import Link from 'next/link'
 
 // Types
 interface Member {
@@ -302,72 +303,77 @@ export default function ResultsPage() {
 
              <div className="space-y-3">
                 {leaderboard.map((entry, index) => {
-                  const archetype = getArchetype(entry.score)
-                  const isTop = index === 0
+                  const isFirst = index === 0
+                  const isSecond = index === 1
+                  const isThird = index === 2
                   
                   return (
-                    <motion.div
-                      key={entry.member_id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className={`relative flex items-center p-3 sm:p-4 rounded-2xl border transition-all hover:bg-white/10 group ${
-                        isTop 
-                          ? "bg-gradient-to-r from-fuchsia-900/40 to-black border-fuchsia-500/50 shadow-[0_0_20px_rgba(192,38,211,0.15)]"
-                          : "bg-white/5 border-white/10"
-                      }`}
+                    <Link 
+                      href={`/group/${slug}/member/${entry.member_id}`}
+                      key={entry.member_id} 
+                      className={`
+                        relative group flex items-center p-4 rounded-xl border transition-all duration-300
+                        ${isFirst ? 'bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.2)]' : ''}
+                        ${isSecond ? 'bg-gradient-to-r from-gray-300/10 to-gray-400/10 border-gray-400/30' : ''}
+                        ${isThird ? 'bg-gradient-to-r from-orange-700/10 to-orange-800/10 border-orange-700/30' : ''}
+                        ${!isFirst && !isSecond && !isThird ? 'bg-white/5 border-white/5 hover:bg-white/10' : ''}
+                      `}
                     >
-                       {/* Rank */}
-                       <div className={`w-8 sm:w-12 text-center font-black text-xl sm:text-2xl ${
-                            index === 0 ? 'text-yellow-400' : 
-                            index === 1 ? 'text-slate-300' : 
-                            index === 2 ? 'text-amber-700' : 'text-white/20'
-                       }`}>
-                          {index + 1}
-                       </div>
+                      {/* Rank Badge */}
+                      <div className={`
+                        w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm mr-4 shrink-0
+                        ${isFirst ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/50' : ''}
+                        ${isSecond ? 'bg-gray-300 text-black shadow-lg shadow-gray-300/30' : ''}
+                        ${isThird ? 'bg-orange-700 text-white shadow-lg shadow-orange-700/30' : ''}
+                        ${!isFirst && !isSecond && !isThird ? 'bg-white/10 text-white/50' : ''}
+                      `}>
+                        {index + 1}
+                      </div>
 
-                       {/* Avatar */}
-                       <div className="relative mx-3 sm:mx-4">
-                          <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full p-[2px] bg-gradient-to-br ${isTop ? 'from-yellow-400 via-fuchsia-500 to-violet-500' : 'from-white/20 to-white/5'}`}>
-                            <img 
-                              src={`https://api.dicebear.com/9.x/adventurer/svg?seed=${entry.avatar_seed}`} 
-                              alt={entry.display_name}
-                              className="w-full h-full rounded-full bg-black"
-                            />
+                      {/* Avatar */}
+                      <div className="relative mr-4">
+                        <div className={`
+                          w-12 h-12 rounded-full overflow-hidden border-2 bg-black/50
+                          ${isFirst ? 'border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]' : 'border-white/10'}
+                        `}>
+                           <img 
+                             src={`https://api.dicebear.com/9.x/notionists/svg?seed=${entry.avatar_seed}`}
+                             alt={entry.display_name}
+                             className="w-full h-full object-cover"
+                           />
+                        </div>
+                        {isFirst && (
+                          <div className="absolute -top-2 -right-2 bg-yellow-500 text-black rounded-full p-1 shadow-lg animate-bounce">
+                            <Crown className="w-3 h-3" />
                           </div>
-                          {isTop && <Crown className="absolute -top-2 -right-2 w-5 h-5 text-yellow-400 fill-yellow-400 animate-bounce" />}
-                       </div>
+                        )}
+                      </div>
 
-                       {/* Info */}
-                       <div className="flex-1 min-w-0">
-                          <h3 className={`text-base sm:text-lg font-bold truncate ${isTop ? 'text-white' : 'text-white/90'}`}>
+                      {/* Name & Title */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className={`font-bold truncate ${isFirst ? 'text-yellow-200' : 'text-white'}`}>
                             {entry.display_name}
                           </h3>
-                          <div className="flex items-center gap-2">
-                            <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider ${archetype.color}`}>
-                               {archetype.title}
-                            </span>
-                          </div>
-                       </div>
+                          {isFirst && <span className="text-[10px] font-bold bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded-full border border-yellow-500/30 uppercase tracking-wide">Vibe Master</span>}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-white/40 mt-0.5">
+                          <span>{entry.correct_count} correct guesses</span>
+                          <span className="w-1 h-1 rounded-full bg-white/20" />
+                          <span className="flex items-center gap-1 text-white/30 group-hover:text-violet-300 transition-colors">
+                            View Profile <User className="w-3 h-3" />
+                          </span>
+                        </div>
+                      </div>
 
-                       {/* Score */}
-                       <div className="text-right pl-4">
-                          <div className="text-xl sm:text-3xl font-black text-white">
-                            {entry.score}
-                          </div>
-                          <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Points</div>
-                       </div>
-
-                       {/* Progress Bar Background (Subtle) */}
-                       <div className="absolute bottom-0 left-0 h-[2px] bg-white/5 w-full">
-                          <motion.div 
-                            initial={{ width: 0 }}
-                            animate={{ width: `${Math.min(100, (entry.score / 500) * 100)}%` }}
-                            transition={{ delay: 0.5 + (index * 0.1), duration: 1 }}
-                            className={`h-full opacity-50 ${isTop ? 'bg-gradient-to-r from-fuchsia-500 to-violet-500' : 'bg-white/20'}`}
-                          />
-                       </div>
-                    </motion.div>
+                      {/* Score */}
+                      <div className="text-right">
+                        <div className={`text-xl font-black tabular-nums tracking-tight ${isFirst ? 'text-yellow-400' : 'text-white'}`}>
+                          {entry.score}
+                        </div>
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Points</div>
+                      </div>
+                    </Link>
                   )
                 })}
              </div>

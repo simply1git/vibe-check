@@ -7,6 +7,7 @@ import { Copy, MessageCircle, Play, Users, Edit2, ArrowRight, Loader2, Trophy } 
 import QuizGame from '@/components/QuizGame'
 import UserMenu from '@/components/UserMenu'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 
 export default function LobbyPage() {
   const params = useParams()
@@ -283,58 +284,52 @@ export default function LobbyPage() {
             
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {members.map((member, idx) => (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.05 }}
-                  key={member.id} 
-                  className="bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/5 hover:border-white/20 rounded-2xl p-4 flex flex-col items-center text-center transition-all group relative overflow-hidden"
+                <Link 
+                  href={`/group/${slug}/member/${member.id}`}
+                  key={member.id}
                 >
-                  <div className="relative mb-3">
-                    {member.avatar_seed ? (
-                      <img 
-                        src={`https://api.dicebear.com/9.x/adventurer/svg?seed=${member.avatar_seed}`} 
-                        alt="avatar" 
-                        className="w-16 h-16 rounded-full bg-white/5 border-2 border-white/10 group-hover:border-fuchsia-400/50 transition-colors shadow-lg"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 rounded-full bg-white/5 border-2 border-white/10 border-dashed flex items-center justify-center">
-                         <Users className="w-6 h-6 text-white/20" />
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/5 hover:border-white/20 rounded-2xl p-4 flex flex-col items-center text-center transition-all group relative overflow-hidden h-full"
+                  >
+                    <div className="relative mb-3">
+                      <div className="w-16 h-16 rounded-full overflow-hidden bg-white/5 border-2 border-white/10 group-hover:border-fuchsia-400/50 transition-colors shadow-lg">
+                        <img 
+                          src={`https://api.dicebear.com/9.x/notionists/svg?seed=${member.avatar_seed}`} 
+                          alt={member.display_name} 
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-                    )}
 
-                    {member.is_admin && (
-                      <span className="absolute -top-1 -right-1 bg-yellow-400 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-black/10 shadow-sm">
-                        ADMIN
+                      {member.is_admin && (
+                        <span className="absolute -top-1 -right-1 bg-yellow-400 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-black/10 shadow-sm">
+                          ADMIN
+                        </span>
+                      )}
+                      
+                      {member.completed_chapters >= 5 && (
+                         <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-1 rounded-full border-2 border-black">
+                            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                         </div>
+                      )}
+                    </div>
+                    
+                    <p className="font-bold text-sm truncate w-full mb-1 text-white/90">
+                      {member.display_name}
+                    </p>
+                    
+                    {member.id === currentMember?.id && (
+                      <span className="text-[10px] font-bold bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        You
                       </span>
                     )}
                     
-                    {!member.avatar_seed && (
-                       <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-white/20 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap backdrop-blur-sm">
-                        WAITING
-                      </span>
-                    )}
-
-                    {member.completed_chapters >= 5 && member.avatar_seed && (
-                       <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-1 rounded-full border-2 border-black">
-                          <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                       </div>
-                    )}
-                  </div>
-                  
-                  <p className="font-bold text-sm truncate w-full mb-1 text-white/90">
-                    {member.display_name}
-                  </p>
-                  
-                  {member.id === currentMember?.id && (
-                    <span className="text-[10px] font-bold bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                      You
-                    </span>
-                  )}
-                  
-                  {/* Hover Glow */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-fuchsia-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                </motion.div>
+                    {/* Hover Glow */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-fuchsia-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                  </motion.div>
+                </Link>
               ))}
               
               {/* Empty State / Invite Placeholder */}
