@@ -24,26 +24,20 @@ const MEMBERS = [
 ];
 const PIN = "1234";
 
-// Helper to hash PIN (matching client-side logic roughly, but we use RPC 'set_pin' which takes a hash)
-// Wait, the client hashes the PIN before sending to 'verify_pin'?
-// Let's check 'app/actions.ts' or wherever PIN is handled.
-// Actually, 'docs/schema.sql' says 'member_auth' stores 'pin_hash'.
-// And 'set_pin' RPC takes 'input_pin_hash'.
-// So we need to hash it here.
-// Let's check how the client hashes it.
-// Usually SHA-256.
-
-async function hashPin(pin) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(pin);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 // Node.js crypto version of hashPin
 function nodeHashPin(pin, salt) {
   return crypto.createHash('sha256').update(pin + salt).digest('hex');
+}
+
+const questions = require('../lib/questions.json');
+
+// Helper to get random answer for a question
+function getRandomAnswer(q) {
+  if (q.type === 'text_entry') {
+    return "This is a custom answer for demo purposes.";
+  }
+  const options = q.options;
+  return options[Math.floor(Math.random() * options.length)];
 }
 
 async function seed() {
@@ -71,7 +65,7 @@ async function seed() {
         group_id: group.id,
         display_name: m.name,
         avatar_seed: m.avatar,
-        completed_chapters: 5 // Mark as done so Results page works
+        completed_chapters: 7 // All chapters completed
       })
       .select()
       .single();
@@ -97,11 +91,14 @@ async function seed() {
     }
 
     // 4. Create Dummy Profile (Answers)
-    // We just need some data so the app doesn't crash if it checks profiles
-    const dummyAnswers = {
-      "q1": { "val": "Pizza", "isCustom": false },
-      "q2": { "val": "Friday", "isCustom": false }
-    };
+    const dummyAnswers = {};
+    questions.forEach(q => {
+      dummyAnswers[q.id] = {
+        val: getRandomAnswer(q),
+        isCustom: false
+      };
+    });
+
     const { error: profileError } = await supabase
       .from('profiles')
       .insert({
@@ -116,22 +113,44 @@ async function seed() {
   // We need to simulate that they played the game.
   // We'll create 1 question for each member, and have others answer it.
   
-  const questionTemplates = [
-    { id: 'q1', text: "What is their favorite food?", correct: "Pizza", distractors: ["Sushi", "Burgers", "Salad"] },
-    { id: 'q2', text: "Best day of the week?", correct: "Friday", distractors: ["Monday", "Wednesday", "Sunday"] },
-    { id: 'q3', text: "Dream vacation?", correct: "Japan", distractors: ["Paris", "New York", "Bali"] },
-    { id: 'q4', text: "Superpower?", correct: "Flight", distractors: ["Invisibility", "Strength", "Speed"] }
-  ];
+  // Pick random questions from the full list for the quiz
+  const questionTemplates = questions
+    .sort(() => 0.5 - Math.random())
+    .slice(0, MEMBERS.length) // One question per member
+    .map(q => ({
+      id: q.id,
+      text: q.friendText || q.text, // Use friendText if available
+      correct: null, // Will be set per target member based on their profile
+      distractors: q.options.filter(o => o !== "Write your own").slice(0, 3) // Simple distractors logic
+    }));
 
   console.log('🎲 Generating gameplay data...');
 
   // For each member (target), create questions about them
-  for (const targetName of Object.keys(memberIds)) {
+  for (let i = 0; i < Object.keys(memberIds).length; i++) {
+    const targetName = Object.keys(memberIds)[i];
     const targetId = memberIds[targetName];
     
-    // Pick a random question template
-    const template = questionTemplates[Math.floor(Math.random() * questionTemplates.length)];
+    // Pick a question template (use index to rotate)
+    const template = questionTemplates[i % questionTemplates.length];
     
+    // Retrieve the target's answer for this question to set as correct
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('answers')
+      .eq('member_id', targetId)
+      .single();
+      
+    if (!profile || !profile.answers[template.id]) continue;
+    
+    const correctAns = profile.answers[template.id].val;
+    // Ensure distractors don't include correct answer
+    const distractors = template.distractors.filter(d => d !== correctAns);
+    // Fill up distractors if needed (simple fallback)
+    while (distractors.length < 3) {
+      distractors.push("Random Distractor " + Math.random());
+    }
+
     // Insert into quiz_questions
     const { data: quizQ, error: quizError } = await supabase
       .from('quiz_questions')
@@ -139,8 +158,8 @@ async function seed() {
         group_id: group.id,
         target_member_id: targetId,
         question_id: template.id,
-        correct_option: template.correct,
-        distractors: template.distractors
+        correct_option: correctAns,
+        distractors: distractors
       })
       .select()
       .single();

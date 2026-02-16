@@ -59,6 +59,20 @@ const CHAPTER_THEMES: Record<number, { bg: string, accent: string, title: string
     glow: "shadow-fuchsia-500/20",
     title: "Soul Layer",
     desc: "The secrets you keep locked away."
+  },
+  6: { 
+    bg: "from-slate-900 via-rose-900 to-slate-900", 
+    accent: "text-rose-400",
+    glow: "shadow-rose-500/20",
+    title: "The Red Flags",
+    desc: "Let's unpack your toxic traits."
+  },
+  7: { 
+    bg: "from-slate-900 via-yellow-900 to-slate-900", 
+    accent: "text-yellow-400",
+    glow: "shadow-yellow-500/20",
+    title: "Rapid Fire",
+    desc: "Don't think. Just choose."
   }
 }
 
@@ -209,7 +223,7 @@ export default function ProfileStepper() {
       // Generate Questions
       generateMemberQuestions(memberId)
 
-      if (currentChapter < 5) {
+      if (currentChapter < 7) {
         setCurrentChapter(prev => prev + 1)
         setQuestionIndex(0)
         setShowChapterIntro(true)
@@ -282,7 +296,7 @@ export default function ProfileStepper() {
             </div>
          </div>
          <div className="font-bold text-sm tracking-wider uppercase text-white/40">
-            Chapter {currentChapter}/5
+            Chapter {currentChapter}/7
          </div>
       </div>
 
@@ -378,7 +392,10 @@ export default function ProfileStepper() {
                   </div>
 
                   {/* Options Stack */}
-                  <div className="space-y-3 relative z-10">
+                  <div className={cn(
+                     "relative z-10",
+                     currentChapter === 7 ? "grid grid-cols-2 gap-4" : "space-y-3"
+                  )}>
                      {!(activeQuestion.options.length === 1 && activeQuestion.options[0] === 'Write your own') && activeQuestion.options.map((option, idx) => (
                         <motion.button
                            key={option}
@@ -390,16 +407,20 @@ export default function ProfileStepper() {
                            whileTap={{ scale: 0.98 }}
                            className={cn(
                               "w-full text-left p-4 rounded-xl border transition-all group relative overflow-hidden",
+                              currentChapter === 7 && "text-center py-8 flex flex-col items-center justify-center font-black text-xl",
                               answers[activeQuestion.id]?.val === option && !answers[activeQuestion.id]?.isCustom
                                  ? "border-white/50 bg-white/20 text-white shadow-[0_0_20px_rgba(255,255,255,0.2)]" 
                                  : "border-white/5 hover:border-white/20 hover:bg-white/5 text-white/70 bg-black/20"
                            )}
                         >
-                           <span className="relative z-10 font-medium text-lg">{option}</span>
+                           <span className="relative z-10">{option}</span>
                            {answers[activeQuestion.id]?.val === option && !answers[activeQuestion.id]?.isCustom && (
                               <motion.span 
                                  layoutId="check"
-                                 className="absolute right-4 top-1/2 -translate-y-1/2"
+                                 className={cn(
+                                    "absolute",
+                                    currentChapter === 7 ? "top-2 right-2" : "right-4 top-1/2 -translate-y-1/2"
+                                 )}
                               >
                                  <Check className="w-5 h-5" />
                               </motion.span>
@@ -407,11 +428,13 @@ export default function ProfileStepper() {
                         </motion.button>
                      ))}
 
-                     {/* Magic Pencil Option */}
+                     {/* Magic Pencil Option (Hidden for Rapid Fire) */}
+                     {currentChapter !== 7 && (
                      <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
+                        className={currentChapter === 7 ? "col-span-2" : ""}
                      >
                         {activeCustomInput === activeQuestion.id || (activeQuestion.options.length === 1 && activeQuestion.options[0] === 'Write your own') ? (
                            <form onSubmit={handleCustomSubmit} className="relative">
@@ -451,6 +474,7 @@ export default function ProfileStepper() {
                            </button>
                         )}
                      </motion.div>
+                     )}
                   </div>
 
                   {/* Footer Controls */}

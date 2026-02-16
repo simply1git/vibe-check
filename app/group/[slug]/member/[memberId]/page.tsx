@@ -143,8 +143,15 @@ export default function MemberProfilePage() {
            <div>
              <h1 className="text-4xl font-black tracking-tight mb-1">{member.display_name}</h1>
              {vibeData ? (
-               <div className="inline-block px-4 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-sm font-medium text-white/90">
-                 {vibeData.archetype}
+               <div className="flex flex-col gap-2 items-center">
+                 <div className="inline-block px-4 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-sm font-medium text-white/90">
+                   {vibeData.archetype}
+                 </div>
+                 {vibeData.toxicTrait && (
+                   <div className="inline-block px-4 py-1 rounded-full bg-rose-500/20 backdrop-blur-md border border-rose-500/20 text-xs font-bold text-rose-200 uppercase tracking-wide">
+                     ⚠️ {vibeData.toxicTrait}
+                   </div>
+                 )}
                </div>
              ) : (
                <p className="text-white/50 text-sm">Profile Incomplete</p>
@@ -191,6 +198,29 @@ export default function MemberProfilePage() {
           </section>
         )}
 
+        {/* Rapid Fire Section */}
+        {profile && profile['q30'] && (
+             <section className="space-y-4">
+               <div className="flex items-center gap-2 opacity-70 mb-2">
+                 <Zap className="w-4 h-4" />
+                 <h3 className="text-xs font-bold uppercase tracking-wider">Rapid Fire</h3>
+               </div>
+               <div className="grid grid-cols-2 gap-3">
+                 {['q30', 'q31', 'q32', 'q33', 'q34'].map(id => {
+                    const ans = profile[id]
+                    if (!ans) return null
+                    const qText = getQuestionText(id).replace('Rapid Fire: ', '')
+                    return (
+                      <div key={id} className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
+                        <div className="text-[10px] text-white/40 uppercase mb-1">{qText}</div>
+                        <div className="font-bold text-sm">{ans.val}</div>
+                      </div>
+                    )
+                 })}
+               </div>
+             </section>
+        )}
+
         {/* The Receipts (Answers) */}
         {profile && Object.keys(profile).length > 0 && (
           <section className="space-y-6">
@@ -205,6 +235,7 @@ export default function MemberProfilePage() {
                 { id: 'q1', label: "Aesthetic" },
                 { id: 'q5', label: "Nickname" }, // Text
                 { id: 'q16', label: "Hill to Die On" },
+                { id: 'q29', label: "Zombie Plan" },
                 { id: 'q25', label: "Core Memory" } // Text
               ].map(item => {
                 const ans = profile[item.id]
