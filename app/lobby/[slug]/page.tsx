@@ -85,8 +85,14 @@ export default function LobbyPage() {
 
   const handleShareWhatsApp = () => {
     const url = `${window.location.origin}/?join=${slug}`
-    const text = `How well do you actually know me? Join our group ${group?.name} on VibeCheck and find out! ${url}`
+    const text = `How well do you actually know me? Join our group "${group?.name}" on VibeCheck! ${url}`
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+  }
+
+  const handleShareTwitter = () => {
+    const url = `${window.location.origin}/?join=${slug}`
+    const text = `I just created a Vibe Check group called "${group?.name}". Come test our friendship soul!`
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
   }
 
   const handleStartGame = () => {
@@ -235,13 +241,22 @@ export default function LobbyPage() {
                   </button>
                 )}
 
-                <button 
-                  onClick={handleShareWhatsApp}
-                  className="w-full flex items-center justify-center space-x-2 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] py-4 rounded-2xl font-bold transition-colors border border-[#25D366]/20"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  <span>Invite via WhatsApp</span>
-                </button>
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                 <button 
+                    onClick={handleShareWhatsApp}
+                    className="w-full bg-[#25D366]/20 hover:bg-[#25D366]/30 text-[#25D366] font-bold py-3 rounded-xl border border-[#25D366]/20 transition-all flex items-center justify-center gap-2"
+                 >
+                    <MessageCircle className="w-5 h-5" />
+                    WhatsApp
+                 </button>
+                 <button 
+                    onClick={handleShareTwitter}
+                    className="w-full bg-[#1DA1F2]/20 hover:bg-[#1DA1F2]/30 text-[#1DA1F2] font-bold py-3 rounded-xl border border-[#1DA1F2]/20 transition-all flex items-center justify-center gap-2"
+                 >
+                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    Twitter
+                 </button>
+              </div>
               </div>
             </div>
           </div>

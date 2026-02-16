@@ -21,11 +21,20 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "VibeCheck",
+    images: [
+      {
+        url: "/api/og",
+        width: 1200,
+        height: 630,
+        alt: "VibeCheck - The Friendship Soul Test",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "VibeCheck",
     description: "Discover the soul of your friend group.",
+    images: ["/api/og"],
   },
   manifest: "/manifest.json",
   themeColor: "#000000",
