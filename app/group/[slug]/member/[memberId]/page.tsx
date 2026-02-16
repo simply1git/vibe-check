@@ -255,7 +255,7 @@ export default function MemberProfilePage() {
         )}
 
         {/* Locked State if incomplete */}
-        {(!profile || Object.keys(profile).length < 5) && (
+        {(!profile || Object.keys(profile).length < 25) && (
           <div className="text-center py-10 opacity-50">
             <Lock className="w-12 h-12 mx-auto mb-4" />
             <p>This soul is still loading...</p>

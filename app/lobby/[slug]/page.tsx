@@ -309,7 +309,7 @@ export default function LobbyPage() {
                         </span>
                       )}
                       
-                      {member.completed_chapters >= 5 && (
+                      {member.completed_chapters >= 7 && (
                          <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-1 rounded-full border-2 border-black">
                             <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
                          </div>

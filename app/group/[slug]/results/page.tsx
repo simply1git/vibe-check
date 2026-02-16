@@ -38,6 +38,7 @@ export default function ResultsPage() {
   const [groupId, setGroupId] = useState('')
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
+  const [memberProfiles, setMemberProfiles] = useState<Record<string, any>>({})
   
   // Loading Messages
   const loadingMessages = [
@@ -113,6 +114,20 @@ export default function ResultsPage() {
         .in('guesser_id', memberIds)
 
       if (groupAttemptsError) throw groupAttemptsError
+
+      // 4. Fetch Profiles (for Red Flags & Stats)
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('member_id, answers')
+        .in('member_id', memberIds)
+
+      if (!profilesError && profiles) {
+        const profileMap: Record<string, any> = {}
+        profiles.forEach(p => {
+          profileMap[p.member_id] = p.answers
+        })
+        setMemberProfiles(profileMap)
+      }
 
       // Calculate Leaderboard
       const scores = new Map<string, { score: number, correct: number }>()
@@ -289,6 +304,102 @@ export default function ResultsPage() {
                 {averageScore > 50 ? '🔥 Chaotic Energy' : '🧊 Chill Vibes'}
               </p>
             </motion.div>
+          </div>
+
+          {/* Red Flag Parade */}
+          <div className="max-w-7xl mx-auto w-full px-4 overflow-hidden">
+             <div className="flex items-center justify-center mb-8">
+               <div className="h-[1px] w-12 bg-white/20 mr-4" />
+               <h2 className="text-2xl font-black uppercase tracking-widest text-red-400/80 flex items-center gap-2">
+                 🚩 The Red Flag Parade
+               </h2>
+               <div className="h-[1px] w-12 bg-white/20 ml-4" />
+             </div>
+             
+             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x">
+                {leaderboard.map((member) => {
+                  const answers = memberProfiles[member.member_id]
+                  const toxicTrait = answers?.['q26']?.val
+                  if (!toxicTrait) return null
+
+                  return (
+                    <div key={member.member_id} className="snap-center shrink-0 w-64 bg-red-900/10 border border-red-500/20 rounded-xl p-4 flex flex-col items-center text-center relative overflow-hidden group">
+                       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                       <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-red-500/30 mb-3 bg-black/50">
+                          <img 
+                             src={`https://api.dicebear.com/9.x/notionists/svg?seed=${member.avatar_seed}`}
+                             alt={member.display_name}
+                             className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                           />
+                       </div>
+                       <h3 className="font-bold text-red-200 mb-1">{member.display_name}</h3>
+                       <p className="text-xs text-red-400/60 font-bold uppercase tracking-widest mb-2">is toxic because...</p>
+                       <p className="text-sm text-white/80 italic">"{toxicTrait}"</p>
+                    </div>
+                  )
+                })}
+             </div>
+          </div>
+
+          {/* Rapid Fire Stats */}
+          <div className="max-w-4xl mx-auto w-full px-4">
+             <div className="flex items-center justify-center mb-8">
+               <div className="h-[1px] w-12 bg-white/20 mr-4" />
+               <h2 className="text-2xl font-black uppercase tracking-widest text-yellow-400/80 flex items-center gap-2">
+                 ⚡ Rapid Fire Splits
+               </h2>
+               <div className="h-[1px] w-12 bg-white/20 ml-4" />
+             </div>
+             
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[
+                  { id: 'q30', left: 'Call', right: 'Text', icon: '📞' },
+                  { id: 'q33', left: 'Plan', right: 'Wing', icon: '✈️' },
+                  { id: 'q31', left: 'In', right: 'Out', icon: '🏠' }
+                ].map((stat) => {
+                   let leftCount = 0
+                   let rightCount = 0
+                   let total = 0
+                   
+                   Object.values(memberProfiles).forEach((ans: any) => {
+                      const val = ans?.[stat.id]?.val
+                      if (val) {
+                        // Assuming binary choice questions have consistent order or values
+                        // We need to check the actual value strings or indices
+                        // For simplicity, let's just check if it matches the 'left' label somewhat or is the first option
+                        // Actually, let's just look at the raw values.
+                        // Better approach: Count unique values and show the split.
+                        if (val.includes(stat.left)) leftCount++
+                        else if (val.includes(stat.right)) rightCount++
+                        else {
+                           // Fallback: Check index 0 vs 1 if possible, or just string match
+                           // For now, let's assume the string contains the keyword
+                           if (val.toLowerCase().includes(stat.left.toLowerCase())) leftCount++
+                           else rightCount++
+                        }
+                        total++
+                      }
+                   })
+
+                   const leftPct = total ? Math.round((leftCount / total) * 100) : 50
+                   
+                   return (
+                     <div key={stat.id} className="bg-white/5 border border-white/10 rounded-xl p-4 relative overflow-hidden">
+                        <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-white/40 mb-2">
+                           <span>{stat.left}</span>
+                           <span>{stat.right}</span>
+                        </div>
+                        <div className="relative h-2 bg-white/10 rounded-full overflow-hidden mb-2">
+                           <div className="absolute top-0 left-0 h-full bg-yellow-400 transition-all duration-1000" style={{ width: `${leftPct}%` }} />
+                        </div>
+                        <div className="flex justify-between text-xl font-black text-white">
+                           <span>{leftPct}%</span>
+                           <span>{100 - leftPct}%</span>
+                        </div>
+                     </div>
+                   )
+                })}
+             </div>
           </div>
 
           {/* The Vibe Tribe - List View */}

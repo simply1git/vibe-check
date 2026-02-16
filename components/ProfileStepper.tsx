@@ -286,7 +286,7 @@ export default function ProfileStepper() {
                <X className="w-6 h-6" />
             </button>
             <div className="flex space-x-2">
-                {[1, 2, 3, 4, 5].map(c => (
+                {[1, 2, 3, 4, 5, 6, 7].map(c => (
                    <div key={c} className={cn(
                       "h-1.5 w-8 rounded-full transition-all duration-500",
                       c < currentChapter ? "bg-white/80" : 
