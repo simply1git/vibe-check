@@ -238,6 +238,7 @@ export default function SetupPage() {
                    value={accessCode}
                    onChange={(e) => setAccessCode(e.target.value)}
                    className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white placeholder-white/20 focus:outline-none focus:border-fuchsia-500/50 transition-all font-mono"
+                   autoComplete="off"
                  />
                  <button
                    onClick={handleSaveSettings}

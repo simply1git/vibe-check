@@ -75,7 +75,9 @@ export default function Home() {
         if (groupError.code === '23505') { // Duplicate key
           setShowJoinSuggestion(true)
           setActiveTab('create') // Go back to fix name
-          throw new Error('Group name already taken!')
+          setLoading(false)
+          setError('Group name already taken!')
+          return // Stop execution, don't throw
         }
         throw groupError
       }
@@ -569,6 +571,7 @@ export default function Home() {
                       onChange={(e) => setPasswordInput(e.target.value)}
                       className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 text-center font-mono text-lg tracking-widest focus:outline-none focus:border-white/50 transition-all"
                       autoFocus
+                      autoComplete="off"
                     />
 
                    {error && (
@@ -626,7 +629,7 @@ export default function Home() {
                         onChange={(e) => setPinInput(e.target.value)}
                         maxLength={4}
                         inputMode="numeric"
-                        autoComplete="new-password"
+                        autoComplete="off"
                         className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 text-center font-mono text-xl tracking-widest focus:outline-none focus:border-violet-500/50 focus:bg-violet-500/5 transition-all"
                         autoFocus
                       />
@@ -641,7 +644,7 @@ export default function Home() {
                         onChange={(e) => setConfirmPinInput(e.target.value)}
                         maxLength={4}
                         inputMode="numeric"
-                        autoComplete="new-password"
+                        autoComplete="off"
                         className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 text-center font-mono text-xl tracking-widest focus:outline-none focus:border-violet-500/50 focus:bg-violet-500/5 transition-all"
                       />
                     </div>
@@ -704,6 +707,7 @@ export default function Home() {
                         maxLength={4}
                         className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 text-center font-mono text-xl tracking-widest focus:outline-none focus:border-violet-500/50 focus:bg-violet-500/5 transition-all"
                         autoFocus
+                        autoComplete="off"
                       />
                     </div>
                   </div>
