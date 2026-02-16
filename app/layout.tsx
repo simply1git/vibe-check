@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://vibecheck.vercel.app'),
   title: "VibeCheck - The Friendship Soul Test",
   description: "Discover the soul of your friend group. No login required.",
   openGraph: {

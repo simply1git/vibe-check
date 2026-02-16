@@ -690,7 +690,7 @@ export default function Home() {
                   className="space-y-4"
                 >
                   <div className="space-y-1 text-center mb-6">
-                     <h3 className="text-xl font-bold">Welcome Back</h3>
+                     <h3 className="text-xl font-bold">Welcome Back, {pendingJoin?.name}</h3>
                      <p className="text-white/60 text-sm">
                        Enter your PIN to verify it's you.
                      </p>
