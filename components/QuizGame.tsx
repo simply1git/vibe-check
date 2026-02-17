@@ -190,39 +190,45 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit, mode =
       }
 
       // Process Questions
-      const processedQuestions: QuizQuestion[] = (mode === 'most_likely') 
-        ? questionsData.filter(q => q.id.startsWith('ml')).map(q => ({
+      let processedQuestions: QuizQuestion[] = []
+      
+      if (mode === 'most_likely') {
+        processedQuestions = questionsData
+          .filter(q => q.id.startsWith('ml'))
+          .map(q => ({
             id: q.id,
             question_text: q.text,
             target_member_name: 'Group Vote',
             correct_option: '',
             options: [] // Filled dynamically above
           }))
-        : data.map((item: any) => {
-        const qDef = questionsData.find(q => q.id === item.question_id)
-        let text = 'Unknown Question'
-        const targetName = item.members?.display_name || 'Anonymous'
+      } else {
+        processedQuestions = data.map((item: any) => {
+          const qDef = questionsData.find(q => q.id === item.question_id)
+          let text = 'Unknown Question'
+          const targetName = item.members?.display_name || 'Anonymous'
 
-        if (qDef) {
-           // Use friendText if available, otherwise fallback
-           // @ts-ignore
-           const rawText = qDef.friendText || qDef.text
-           // Replace placeholder with name
-           text = rawText.replace(/\{name\}/g, targetName)
-        }
-        
-        // Combine and shuffle options
-        const allOptions = [...item.distractors, item.correct_option]
-          .sort(() => Math.random() - 0.5)
+          if (qDef) {
+             // Use friendText if available, otherwise fallback
+             // @ts-ignore
+             const rawText = qDef.friendText || qDef.text
+             // Replace placeholder with name
+             text = rawText.replace(/\{name\}/g, targetName)
+          }
+          
+          // Combine and shuffle options
+          const allOptions = [...item.distractors, item.correct_option]
+            .sort(() => Math.random() - 0.5)
 
-        return {
-          id: item.id,
-          question_text: text,
-          target_member_name: targetName,
-          correct_option: item.correct_option,
-          options: allOptions
-        }
-      })
+          return {
+            id: item.id,
+            question_text: text,
+            target_member_name: targetName,
+            correct_option: item.correct_option,
+            options: allOptions
+          }
+        })
+      }
 
       const questionLimit = mode === 'lightning' ? 5 : 10
       const randomQuestions = processedQuestions
