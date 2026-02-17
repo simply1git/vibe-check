@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import questionsData from '@/lib/questions.json'
-import { Copy, MessageCircle, Crown, Award, RefreshCw, Lock, ArrowLeft, Share2, Zap, User } from 'lucide-react'
+;import questionsData from '@/lib/questions.json'
+import { Copy, MessageCircle, Crown, Award, RefreshCw, Lock, ArrowLeft, Share2, Zap, User, Sparkles, Flame, Ghost, Shield, Skull } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { motion } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
@@ -219,6 +219,33 @@ export default function ResultsPage() {
     return { title: "Initiate", color: "text-slate-400", bg: "bg-slate-500/20", border: "border-slate-500/50" }
   }
 
+  const getBinarySplit = (questionId: string, fallbackLeft: string, fallbackRight: string) => {
+    const question = questionsData.find(q => q.id === questionId)
+    const options = question?.options || []
+    const leftOption = options[0] || fallbackLeft
+    const rightOption = options[1] || fallbackRight
+    let leftCount = 0
+    let rightCount = 0
+    let total = 0
+
+    Object.values(memberProfiles).forEach((ans: any) => {
+      const val = ans?.[questionId]?.val
+      if (val === leftOption) {
+        leftCount++
+        total++
+      } else if (val === rightOption) {
+        rightCount++
+        total++
+      }
+    })
+
+    const leftPct = total ? Math.round((leftCount / total) * 100) : 50
+    return { leftLabel: leftOption, rightLabel: rightOption, leftPct, rightPct: 100 - leftPct, total }
+  }
+
+  const hasRedFlags = leaderboard.some(member => memberProfiles[member.member_id]?.['q26']?.val)
+  const topThree = leaderboard.slice(0, 3)
+
   return (
     <div className="min-h-screen bg-black text-white pb-20 p-4 md:p-8 relative overflow-hidden">
       {/* Background */}
@@ -286,7 +313,6 @@ export default function ResultsPage() {
         </div>
 
         <div className="flex flex-col space-y-8">
-          {/* Group Vibe - Sleek & Centered */}
           <div className="flex justify-center">
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
@@ -306,6 +332,74 @@ export default function ResultsPage() {
             </motion.div>
           </div>
 
+          <div className="max-w-5xl mx-auto w-full px-4">
+             <div className="flex items-center justify-center mb-6">
+               <div className="h-[1px] w-12 bg-white/20 mr-4" />
+               <h2 className="text-2xl font-black uppercase tracking-widest text-violet-200/90 flex items-center gap-2">
+                 ⚡ Replay Mode
+               </h2>
+               <div className="h-[1px] w-12 bg-white/20 ml-4" />
+             </div>
+
+             <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="text-sm font-bold uppercase tracking-widest text-white/40">Top 3</div>
+                    <div className="text-lg font-bold text-white/90">Run it back and steal the crown.</div>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      onClick={() => router.push(`/lobby/${slug}`)}
+                      className="bg-white text-black hover:bg-gray-100 font-bold px-5 py-2.5 rounded-full transition-all hover:scale-105"
+                    >
+                      Challenge Again
+                    </button>
+                    <button
+                      onClick={() => router.push(`/group/${slug}/profile`)}
+                      className="bg-white/10 hover:bg-white/20 text-white font-bold px-5 py-2.5 rounded-full border border-white/10 transition-all"
+                    >
+                      Update Profile
+                    </button>
+                  </div>
+                </div>
+
+                {topThree.length === 0 ? (
+                  <div className="mt-6 text-center text-white/50 text-sm font-semibold uppercase tracking-widest">
+                    No scores yet. Play a round to crown a Vibe Master.
+                  </div>
+                ) : (
+                  <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {topThree.map((entry, index) => (
+                      <div key={entry.member_id} className="bg-black/40 border border-white/10 rounded-xl p-4 flex items-center gap-4">
+                        <div className="relative">
+                          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/10 bg-black/50">
+                            <img
+                              src={`https://api.dicebear.com/9.x/notionists/svg?seed=${entry.avatar_seed}`}
+                              alt={entry.display_name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          {index === 0 && (
+                            <div className="absolute -top-2 -right-2 bg-yellow-500 text-black rounded-full p-1 shadow-lg">
+                              <Crown className="w-3 h-3" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-white truncate">{entry.display_name}</div>
+                          <div className="text-xs text-white/40 uppercase tracking-widest">{entry.correct_count} correct</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-black text-white">{entry.score}</div>
+                          <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Points</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+             </div>
+          </div>
+
           {/* Red Flag Parade */}
           <div className="max-w-7xl mx-auto w-full px-4 overflow-hidden">
              <div className="flex items-center justify-center mb-8">
@@ -317,6 +411,11 @@ export default function ResultsPage() {
              </div>
              
              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x">
+                {!hasRedFlags && (
+                  <div className="w-full bg-white/5 border border-white/10 rounded-xl p-6 text-center text-white/60">
+                    No red flags yet. Complete Chapter 6 to reveal the chaos.
+                  </div>
+                )}
                 {leaderboard.map((member) => {
                   const answers = memberProfiles[member.member_id]
                   const toxicTrait = answers?.['q26']?.val
@@ -341,6 +440,107 @@ export default function ResultsPage() {
              </div>
           </div>
 
+          {/* Squad Archetypes */}
+          <div className="max-w-7xl mx-auto w-full px-4">
+            <div className="flex items-center justify-center mb-8">
+               <div className="h-[1px] w-12 bg-white/20 mr-4" />
+               <h2 className="text-2xl font-black uppercase tracking-widest text-blue-400/80 flex items-center gap-2">
+                 🎭 Squad Archetypes
+               </h2>
+               <div className="h-[1px] w-12 bg-white/20 ml-4" />
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[
+                  {
+                    id: 'main_character',
+                    title: 'The Main Character',
+                    icon: Sparkles,
+                    description: 'Thinks they are in a movie.',
+                    color: 'text-yellow-400',
+                    bgColor: 'bg-yellow-500/10',
+                    borderColor: 'border-yellow-500/20',
+                    condition: (a: any) => a?.q29?.val === 'Lead the survivors' || a?.q18?.val === 'Fame'
+                  },
+                  {
+                    id: 'chaos_agent',
+                    title: 'The Chaos Agent',
+                    icon: Flame,
+                    description: 'Thrives on disorder.',
+                    color: 'text-red-400',
+                    bgColor: 'bg-red-500/10',
+                    borderColor: 'border-red-500/20',
+                    condition: (a: any) => a?.q2?.val === 'Pure Chaos/Memes' || a?.q33?.val === 'Wing it'
+                  },
+                  {
+                    id: 'ghost',
+                    title: 'The Ghost',
+                    icon: Ghost,
+                    description: 'Here one second, gone the next.',
+                    color: 'text-slate-400',
+                    bgColor: 'bg-slate-500/10',
+                    borderColor: 'border-slate-500/20',
+                    condition: (a: any) => a?.q9?.val === "Planning the 'Irish Exit'" || a?.q14?.val === 'Total Silence'
+                  },
+                  {
+                    id: 'dad',
+                    title: 'The Team Dad',
+                    icon: Shield,
+                    description: 'Responsible (unfortunately).',
+                    color: 'text-blue-400',
+                    bgColor: 'bg-blue-500/10',
+                    borderColor: 'border-blue-500/20',
+                    condition: (a: any) => a?.q7?.val === 'Planned everything' || a?.q29?.val === 'Hoard all the snacks'
+                  },
+                  {
+                    id: 'villain',
+                    title: 'The Villain',
+                    icon: Skull,
+                    description: 'Actually scary.',
+                    color: 'text-purple-400',
+                    bgColor: 'bg-purple-500/10',
+                    borderColor: 'border-purple-500/20',
+                    condition: (a: any) => a?.q29?.val === 'Sacrifice the slow ones' || a?.q27?.val === 'The Killer'
+                  }
+                ].map((archetype) => {
+                  const members = leaderboard.filter(m => {
+                    const answers = memberProfiles[m.member_id]
+                    return archetype.condition(answers)
+                  })
+
+                  if (members.length === 0) return null
+
+                  return (
+                    <div key={archetype.id} className={`rounded-xl border ${archetype.bgColor} ${archetype.borderColor} p-6 relative overflow-hidden group hover:scale-[1.02] transition-transform`}>
+                       <div className="flex items-center gap-3 mb-4">
+                         <div className={`p-3 rounded-full bg-black/20 ${archetype.color}`}>
+                           <archetype.icon className="w-6 h-6" />
+                         </div>
+                         <div>
+                           <h3 className={`font-black text-lg ${archetype.color}`}>{archetype.title}</h3>
+                           <p className="text-white/40 text-xs font-bold uppercase tracking-wider">{archetype.description}</p>
+                         </div>
+                       </div>
+                       
+                       <div className="flex flex-wrap gap-2">
+                         {members.map(m => (
+                           <div key={m.member_id} className="flex items-center gap-2 bg-black/30 rounded-full pl-1 pr-3 py-1 border border-white/5">
+                              <img 
+                                src={`https://api.dicebear.com/9.x/notionists/svg?seed=${m.avatar_seed}`}
+                                alt={m.display_name}
+                                className="w-6 h-6 rounded-full bg-white/10"
+                              />
+                              <span className="text-sm font-bold text-white/90">{m.display_name}</span>
+                           </div>
+                         ))}
+                       </div>
+                    </div>
+                  )
+                })}
+             </div>
+          </div>
+
+
           {/* Rapid Fire Stats */}
           <div className="max-w-4xl mx-auto w-full px-4">
              <div className="flex items-center justify-center mb-8">
@@ -353,49 +553,30 @@ export default function ResultsPage() {
              
              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                  { id: 'q30', left: 'Call', right: 'Text', icon: '📞' },
-                  { id: 'q33', left: 'Plan', right: 'Wing', icon: '✈️' },
-                  { id: 'q31', left: 'In', right: 'Out', icon: '🏠' }
+                  { id: 'q30', fallbackLeft: 'Call', fallbackRight: 'Text' },
+                  { id: 'q33', fallbackLeft: 'Plan', fallbackRight: 'Wing' },
+                  { id: 'q31', fallbackLeft: 'In', fallbackRight: 'Out' }
                 ].map((stat) => {
-                   let leftCount = 0
-                   let rightCount = 0
-                   let total = 0
-                   
-                   Object.values(memberProfiles).forEach((ans: any) => {
-                      const val = ans?.[stat.id]?.val
-                      if (val) {
-                        // Assuming binary choice questions have consistent order or values
-                        // We need to check the actual value strings or indices
-                        // For simplicity, let's just check if it matches the 'left' label somewhat or is the first option
-                        // Actually, let's just look at the raw values.
-                        // Better approach: Count unique values and show the split.
-                        if (val.includes(stat.left)) leftCount++
-                        else if (val.includes(stat.right)) rightCount++
-                        else {
-                           // Fallback: Check index 0 vs 1 if possible, or just string match
-                           // For now, let's assume the string contains the keyword
-                           if (val.toLowerCase().includes(stat.left.toLowerCase())) leftCount++
-                           else rightCount++
-                        }
-                        total++
-                      }
-                   })
-
-                   const leftPct = total ? Math.round((leftCount / total) * 100) : 50
+                   const split = getBinarySplit(stat.id, stat.fallbackLeft, stat.fallbackRight)
                    
                    return (
                      <div key={stat.id} className="bg-white/5 border border-white/10 rounded-xl p-4 relative overflow-hidden">
                         <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-white/40 mb-2">
-                           <span>{stat.left}</span>
-                           <span>{stat.right}</span>
+                           <span>{split.leftLabel}</span>
+                           <span>{split.rightLabel}</span>
                         </div>
                         <div className="relative h-2 bg-white/10 rounded-full overflow-hidden mb-2">
-                           <div className="absolute top-0 left-0 h-full bg-yellow-400 transition-all duration-1000" style={{ width: `${leftPct}%` }} />
+                           <div className="absolute top-0 left-0 h-full bg-yellow-400 transition-all duration-1000" style={{ width: `${split.leftPct}%` }} />
                         </div>
                         <div className="flex justify-between text-xl font-black text-white">
-                           <span>{leftPct}%</span>
-                           <span>{100 - leftPct}%</span>
+                           <span>{split.leftPct}%</span>
+                           <span>{split.rightPct}%</span>
                         </div>
+                        {split.total === 0 && (
+                          <div className="mt-2 text-xs text-white/40 font-semibold uppercase tracking-widest text-center">
+                            No responses yet
+                          </div>
+                        )}
                      </div>
                    )
                 })}

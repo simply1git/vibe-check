@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { Copy, MessageCircle, Play, Users, Edit2, ArrowRight, Loader2, Trophy } from 'lucide-react'
+import { Copy, MessageCircle, Play, Users, Edit2, ArrowRight, Loader2, Trophy, Zap } from 'lucide-react'
 import QuizGame from '@/components/QuizGame'
 import UserMenu from '@/components/UserMenu'
 import { motion } from 'framer-motion'
@@ -17,7 +17,7 @@ export default function LobbyPage() {
   const [group, setGroup] = useState<any>(null)
   const [members, setMembers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [gameStarted, setGameStarted] = useState(false)
+  const [gameMode, setGameMode] = useState<'classic' | 'lightning' | null>(null)
   const [currentMember, setCurrentMember] = useState<any>(null)
 
   useEffect(() => {
@@ -96,12 +96,12 @@ export default function LobbyPage() {
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
   }
 
-  const handleStartGame = () => {
-    setGameStarted(true)
+  const handleStartGame = (mode: 'classic' | 'lightning') => {
+    setGameMode(mode)
   }
 
   const handleExitGame = () => {
-    setGameStarted(false)
+    setGameMode(null)
   }
 
   const handleProfileNavigation = () => {
@@ -118,12 +118,13 @@ export default function LobbyPage() {
     </div>
   )
 
-  if (gameStarted) {
+  if (gameMode) {
     return (
       <div className="min-h-screen bg-black">
         <QuizGame 
           memberId={currentMember?.id} 
           groupId={group?.id} 
+          mode={gameMode}
           onComplete={() => router.push(`/group/${slug}/results`)}
           onExit={handleExitGame}
         />
@@ -131,7 +132,7 @@ export default function LobbyPage() {
     )
   }
 
-  const isProfileComplete = currentMember?.completed_chapters >= 5
+  const isProfileComplete = currentMember?.completed_chapters >= 7
 
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-8 relative overflow-hidden">
@@ -214,11 +215,18 @@ export default function LobbyPage() {
                 ) : (
                   <div className="space-y-3">
                     <button
-                      onClick={handleStartGame}
+                      onClick={() => handleStartGame('classic')}
                       className="w-full bg-white text-black hover:bg-gray-100 font-bold py-4 rounded-2xl flex items-center justify-center space-x-3 transition-all transform hover:scale-[1.02] shadow-xl"
                     >
                       <Play className="w-5 h-5" />
                       <span>Start The Quiz</span>
+                    </button>
+                    <button
+                      onClick={() => handleStartGame('lightning')}
+                      className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center space-x-3 transition-all transform hover:scale-[1.02] shadow-xl shadow-fuchsia-500/20"
+                    >
+                      <Zap className="w-5 h-5" />
+                      <span>Lightning Round</span>
                     </button>
                     <button
                       onClick={handleProfileNavigation}

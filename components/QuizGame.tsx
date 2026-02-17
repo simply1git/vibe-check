@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import confetti from 'canvas-confetti'
 import { supabase } from '@/lib/supabase'
@@ -28,15 +28,16 @@ interface QuizGameProps {
   memberId: string
   onComplete?: () => void
   onExit?: () => void
+  mode?: 'classic' | 'lightning'
 }
 
 type GameState = 'SELECT' | 'PLAY' | 'GAMEOVER'
 
-export default function QuizGame({ groupId, memberId, onComplete, onExit }: QuizGameProps) {
-  const [gameState, setGameState] = useState<GameState>('SELECT')
+export default function QuizGame({ groupId, memberId, onComplete, onExit, mode = 'classic' }: QuizGameProps) {
+  const [gameState, setGameState] = useState<GameState>(mode === 'lightning' ? 'PLAY' : 'SELECT')
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(mode === 'lightning')
   const [score, setScore] = useState(0)
   const [streak, setStreak] = useState(0)
   const [loadingMsg, setLoadingMsg] = useState('Entering The Arena...')
@@ -88,10 +89,14 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit }: Quiz
   }, [groupId, memberId])
 
   // 2. Start Game Logic
-  const handleStartGame = async (target: Member | 'random') => {
+  const handleStartGame = useCallback(async (target: Member | 'random') => {
     setTargetMember(target)
     setLoading(true)
     setLoadingMsg(target === 'random' ? "Summoning Random Vibes..." : `Syncing with ${target.display_name}...`)
+    setScore(0)
+    setStreak(0)
+    setCurrentIndex(0)
+    setSelectedOption(null)
 
     try {
       let query = supabase
@@ -123,6 +128,9 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit }: Quiz
       if (!data || data.length === 0) {
         alert("No questions found for this selection yet! Try someone else.")
         setLoading(false)
+        if (mode === 'lightning') {
+          setGameState('GAMEOVER')
+        }
         return
       }
 
@@ -153,10 +161,10 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit }: Quiz
         }
       })
 
-      // Pick random 10
+      const questionLimit = mode === 'lightning' ? 5 : 10
       const randomQuestions = processedQuestions
         .sort(() => Math.random() - 0.5)
-        .slice(0, 10)
+        .slice(0, questionLimit)
 
       setQuestions(randomQuestions)
       setGameState('PLAY')
@@ -165,7 +173,13 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit }: Quiz
     } finally {
       setLoading(false)
     }
-  }
+  }, [groupId, memberId, mode])
+
+  useEffect(() => {
+    if (mode === 'lightning') {
+      handleStartGame('random')
+    }
+  }, [mode, handleStartGame])
 
   const handleAnswer = async (option: string) => {
     if (isAnswering) return
@@ -325,14 +339,18 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit }: Quiz
         <div className="w-24 h-24 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-fuchsia-500/25">
           <Trophy className="w-12 h-12 text-white" />
         </div>
-        <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Vibe Check Complete</h2>
-        <p className="text-white/60 mb-8 font-medium">Your compatibility score</p>
+        <h2 className="text-3xl font-black text-white mb-2 tracking-tight">
+          {mode === 'lightning' ? 'Lightning Round Complete' : 'Vibe Check Complete'}
+        </h2>
+        <p className="text-white/60 mb-8 font-medium">
+          {mode === 'lightning' ? 'Your score' : 'Your compatibility score'}
+        </p>
         <div className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400 mb-8">
           {score}
         </div>
         <div className="flex flex-col space-y-3">
           <button 
-            onClick={() => setGameState('SELECT')}
+            onClick={() => (mode === 'lightning' ? handleStartGame('random') : setGameState('SELECT'))}
             className="bg-white text-black hover:bg-gray-100 font-bold py-4 px-10 rounded-full transition-all hover:scale-105 active:scale-95 shadow-xl shadow-white/10 flex items-center justify-center space-x-2"
           >
             <span>Play Again</span>
@@ -374,7 +392,7 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit }: Quiz
       <div className="absolute -top-12 left-0 right-0 flex justify-between items-center px-2 z-10">
         <div className="flex items-center space-x-2">
           <button 
-             onClick={() => setGameState('SELECT')}
+             onClick={() => (mode === 'lightning' ? onExit?.() : setGameState('SELECT'))}
              className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 text-xs font-bold text-white/60 hover:text-white hover:bg-white/10 transition-colors"
           >
              Exit

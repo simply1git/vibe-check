@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LogOut, User, ChevronDown, Loader2, Shield, KeyRound, ArrowLeft } from 'lucide-react'
+import { LogOut, User, ChevronDown, Loader2, Shield, KeyRound, ArrowLeft, Edit2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { hashPin } from '@/lib/crypto'
@@ -83,6 +83,13 @@ export default function UserMenu({ className }: { className?: string }) {
       router.push(`/lobby/${slug}`)
     } else {
       router.push('/')
+    }
+  }
+
+  const handleProfile = () => {
+    const slug = localStorage.getItem('group_slug')
+    if (slug) {
+      router.push(`/group/${slug}/profile`)
     }
   }
 
@@ -217,6 +224,14 @@ export default function UserMenu({ className }: { className?: string }) {
                     >
                       <div className="w-4 h-4 flex items-center justify-center">🏠</div>
                       <span>Home</span>
+                    </button>
+
+                    <button
+                      onClick={handleProfile}
+                      className="w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-white/70 hover:bg-white/10 transition-colors text-sm font-medium"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      <span>Edit Profile</span>
                     </button>
 
                     <button
