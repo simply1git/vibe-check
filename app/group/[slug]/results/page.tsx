@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 ;import questionsData from '@/lib/questions.json'
-import { Copy, MessageCircle, Crown, Award, RefreshCw, Lock, ArrowLeft, Share2, Zap, User, Sparkles, Flame, Ghost, Shield, Skull } from 'lucide-react'
+import { Copy, MessageCircle, Crown, Award, RefreshCw, Lock, ArrowLeft, Share2, Zap, User, Sparkles, Flame, Ghost, Shield, Skull, ChevronDown, ChevronUp } from 'lucide-react'
 import confetti from 'canvas-confetti'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
 import UserMenu from '@/components/UserMenu'
 import Link from 'next/link'
+import { analyzeVibe } from '@/lib/vibe-analysis'
+import VibeRadar from '@/components/VibeRadar'
 
 // Types
 interface Member {
@@ -49,6 +51,7 @@ export default function ResultsPage() {
     "Measuring chaos levels..."
   ]
   const [loadingMsg, setLoadingMsg] = useState(loadingMessages[0])
+  const [expandedMember, setExpandedMember] = useState<string | null>(null)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -599,73 +602,126 @@ export default function ResultsPage() {
                   const isSecond = index === 1
                   const isThird = index === 2
                   
+                  const vibe = analyzeVibe(memberProfiles[entry.member_id] || {})
+                  const isExpanded = expandedMember === entry.member_id
+
                   return (
-                    <Link 
-                      href={`/group/${slug}/member/${entry.member_id}`}
+                    <div 
                       key={entry.member_id} 
                       className={`
-                        relative group flex items-center p-4 rounded-xl border transition-all duration-300
+                        relative flex flex-col rounded-xl border transition-all duration-300 overflow-hidden
                         ${isFirst ? 'bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.2)]' : ''}
                         ${isSecond ? 'bg-gradient-to-r from-gray-300/10 to-gray-400/10 border-gray-400/30' : ''}
                         ${isThird ? 'bg-gradient-to-r from-orange-700/10 to-orange-800/10 border-orange-700/30' : ''}
-                        ${!isFirst && !isSecond && !isThird ? 'bg-white/5 border-white/5 hover:bg-white/10' : ''}
+                        ${!isFirst && !isSecond && !isThird ? 'bg-white/5 border-white/5' : ''}
                       `}
                     >
-                      {/* Rank Badge */}
-                      <div className={`
-                        w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm mr-4 shrink-0
-                        ${isFirst ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/50' : ''}
-                        ${isSecond ? 'bg-gray-300 text-black shadow-lg shadow-gray-300/30' : ''}
-                        ${isThird ? 'bg-orange-700 text-white shadow-lg shadow-orange-700/30' : ''}
-                        ${!isFirst && !isSecond && !isThird ? 'bg-white/10 text-white/50' : ''}
-                      `}>
-                        {index + 1}
-                      </div>
-
-                      {/* Avatar */}
-                      <div className="relative mr-4">
+                      <div 
+                        onClick={() => setExpandedMember(isExpanded ? null : entry.member_id)}
+                        className="flex items-center p-4 cursor-pointer hover:bg-white/5 transition-colors"
+                      >
+                        {/* Rank Badge */}
                         <div className={`
-                          w-12 h-12 rounded-full overflow-hidden border-2 bg-black/50
-                          ${isFirst ? 'border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]' : 'border-white/10'}
+                          w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm mr-4 shrink-0
+                          ${isFirst ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/50' : ''}
+                          ${isSecond ? 'bg-gray-300 text-black shadow-lg shadow-gray-300/30' : ''}
+                          ${isThird ? 'bg-orange-700 text-white shadow-lg shadow-orange-700/30' : ''}
+                          ${!isFirst && !isSecond && !isThird ? 'bg-white/10 text-white/50' : ''}
                         `}>
-                           <img 
-                             src={`https://api.dicebear.com/9.x/notionists/svg?seed=${entry.avatar_seed}`}
-                             alt={entry.display_name}
-                             className="w-full h-full object-cover"
-                           />
+                          {index + 1}
                         </div>
-                        {isFirst && (
-                          <div className="absolute -top-2 -right-2 bg-yellow-500 text-black rounded-full p-1 shadow-lg animate-bounce">
-                            <Crown className="w-3 h-3" />
+
+                        {/* Avatar */}
+                        <div className="relative mr-4">
+                          <div className={`
+                            w-12 h-12 rounded-full overflow-hidden border-2 bg-black/50
+                            ${isFirst ? 'border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]' : 'border-white/10'}
+                          `}>
+                             <img 
+                               src={`https://api.dicebear.com/9.x/notionists/svg?seed=${entry.avatar_seed}`}
+                               alt={entry.display_name}
+                               className="w-full h-full object-cover"
+                             />
                           </div>
+                          {isFirst && (
+                            <div className="absolute -top-2 -right-2 bg-yellow-500 text-black rounded-full p-1 shadow-lg animate-bounce">
+                              <Crown className="w-3 h-3" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Name & Title */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h3 className={`font-bold truncate ${isFirst ? 'text-yellow-200' : 'text-white'}`}>
+                              {entry.display_name}
+                            </h3>
+                            {isFirst && <span className="text-[10px] font-bold bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded-full border border-yellow-500/30 uppercase tracking-wide">Vibe Master</span>}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-white/40 mt-0.5">
+                            <span>{entry.correct_count} correct guesses</span>
+                          </div>
+                        </div>
+
+                        {/* Score */}
+                        <div className="text-right mr-4">
+                          <div className={`text-xl font-black tabular-nums tracking-tight ${isFirst ? 'text-yellow-400' : 'text-white'}`}>
+                            {entry.score}
+                          </div>
+                          <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Points</div>
+                        </div>
+
+                        {/* Expand Icon */}
+                        <div className="text-white/40">
+                           {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                        </div>
+                      </div>
+
+                      {/* Expanded Content */}
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="bg-black/20 border-t border-white/5 overflow-hidden"
+                          >
+                             <div className="p-4 flex flex-col sm:flex-row gap-6 items-center">
+                                {/* Radar */}
+                                <div className="w-32 h-32 shrink-0">
+                                   <VibeRadar stats={vibe.stats} color={vibe.colorPalette.split('-')[1] || 'violet'} />
+                                </div>
+                                
+                                {/* Details */}
+                                <div className="flex-1 space-y-3 text-center sm:text-left w-full">
+                                   <div>
+                                      <div className="text-xs font-bold uppercase tracking-widest text-white/40 mb-1">Vibe Archetype</div>
+                                      <div className={`text-xl font-black bg-clip-text text-transparent bg-gradient-to-r ${vibe.colorPalette}`}>
+                                        {vibe.archetype}
+                                      </div>
+                                   </div>
+                                   
+                                   {vibe.toxicTrait && (
+                                     <div>
+                                        <div className="text-xs font-bold uppercase tracking-widest text-white/40 mb-1">Toxic Trait</div>
+                                        <div className="text-sm text-white/80 italic">"{vibe.toxicTrait}"</div>
+                                     </div>
+                                   )}
+                                   
+                                   <div className="pt-2">
+                                     <Link 
+                                       href={`/group/${slug}/member/${entry.member_id}`}
+                                       className="inline-flex items-center text-xs font-bold text-white/60 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-4 py-2 rounded-full border border-white/10"
+                                     >
+                                       View Full Profile <ArrowLeft className="w-3 h-3 ml-2 rotate-180" />
+                                     </Link>
+                                   </div>
+                                </div>
+                             </div>
+                          </motion.div>
                         )}
-                      </div>
-
-                      {/* Name & Title */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className={`font-bold truncate ${isFirst ? 'text-yellow-200' : 'text-white'}`}>
-                            {entry.display_name}
-                          </h3>
-                          {isFirst && <span className="text-[10px] font-bold bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded-full border border-yellow-500/30 uppercase tracking-wide">Vibe Master</span>}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-white/40 mt-0.5">
-                          <span>{entry.correct_count} correct guesses</span>
-                          <span className="w-1 h-1 rounded-full bg-white/20" />
-                          <span className="flex items-center gap-1 text-white/30 group-hover:text-violet-300 transition-colors">
-                            View Profile <User className="w-3 h-3" />
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Score */}
-                      <div className="text-right">
-                        <div className={`text-xl font-black tabular-nums tracking-tight ${isFirst ? 'text-yellow-400' : 'text-white'}`}>
-                          {entry.score}
-                        </div>
-                        <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Points</div>
-                      </div>
-                    </Link>
+                      </AnimatePresence>
+                    </div>
                   )
                 })}
              </div>

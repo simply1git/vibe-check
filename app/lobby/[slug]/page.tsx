@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { Copy, MessageCircle, Play, Users, Edit2, ArrowRight, Loader2, Trophy, Zap } from 'lucide-react'
+import { Copy, MessageCircle, Play, Users, Edit2, ArrowRight, Loader2, Trophy, Zap, Info } from 'lucide-react'
 import QuizGame from '@/components/QuizGame'
 import UserMenu from '@/components/UserMenu'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 
 export default function LobbyPage() {
@@ -19,6 +19,7 @@ export default function LobbyPage() {
   const [loading, setLoading] = useState(true)
   const [gameMode, setGameMode] = useState<'classic' | 'lightning' | null>(null)
   const [currentMember, setCurrentMember] = useState<any>(null)
+  const [showTutorial, setShowTutorial] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -278,16 +279,26 @@ export default function LobbyPage() {
                 The Squad <span className="ml-2 bg-white/10 px-2 py-0.5 rounded-full text-sm">{members.length}</span>
               </h2>
               
-              {/* Admin Manage Button */}
-              {currentMember?.is_admin && (
-                <button 
-                  onClick={() => router.push(`/group/${slug}/setup`)}
-                  className="text-xs font-bold text-white/40 hover:text-white transition-colors uppercase tracking-wider flex items-center gap-1"
-                >
-                  <Edit2 className="w-3 h-3" />
-                  Manage
-                </button>
-              )}
+              <div className="flex gap-2">
+                 <button 
+                   onClick={() => setShowTutorial(true)}
+                   className="text-xs font-bold text-white/40 hover:text-white transition-colors uppercase tracking-wider flex items-center gap-1"
+                 >
+                   <Info className="w-3 h-3" />
+                   How to Play
+                 </button>
+                 
+                 {/* Admin Manage Button */}
+                 {currentMember?.is_admin && (
+                   <button 
+                     onClick={() => router.push(`/group/${slug}/setup`)}
+                     className="text-xs font-bold text-white/40 hover:text-white transition-colors uppercase tracking-wider flex items-center gap-1"
+                   >
+                     <Edit2 className="w-3 h-3" />
+                     Manage
+                   </button>
+                 )}
+              </div>
             </div>
             
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -349,9 +360,75 @@ export default function LobbyPage() {
               </button>
             </div>
           </div>
-
         </div>
       </motion.div>
+
+      {/* Tutorial Modal */}
+      <AnimatePresence>
+        {showTutorial && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+            onClick={() => setShowTutorial(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-[#1a1a1a] border border-white/10 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl relative"
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-indigo-500 to-fuchsia-500 p-6 text-center relative">
+                 <button 
+                   onClick={() => setShowTutorial(false)}
+                   className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
+                 >
+                   <Users className="w-6 h-6 rotate-45" />
+                 </button>
+                 <h2 className="text-3xl font-black text-white mb-2">How to Vibe Check</h2>
+                 <p className="text-white/80 font-medium">3 Steps to Friendship Glory</p>
+              </div>
+
+              {/* Steps */}
+              <div className="p-8 space-y-8">
+                 <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-black text-lg text-fuchsia-400 shrink-0">1</div>
+                    <div>
+                       <h3 className="font-bold text-white mb-1">Build Your Profile</h3>
+                       <p className="text-sm text-white/60">Answer 7 chapters of deep (and dumb) questions about yourself. Be honest!</p>
+                    </div>
+                 </div>
+
+                 <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-black text-lg text-violet-400 shrink-0">2</div>
+                    <div>
+                       <h3 className="font-bold text-white mb-1">Wait for the Squad</h3>
+                       <p className="text-sm text-white/60">Share the link. Once everyone's profile is locked in, the real game begins.</p>
+                    </div>
+                 </div>
+
+                 <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-black text-lg text-cyan-400 shrink-0">3</div>
+                    <div>
+                       <h3 className="font-bold text-white mb-1">The Vibe Quiz</h3>
+                       <p className="text-sm text-white/60">Guess how your friends answered. Points for accuracy. Roasts for failures.</p>
+                    </div>
+                 </div>
+
+                 <button 
+                   onClick={() => setShowTutorial(false)}
+                   className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-colors"
+                 >
+                   Got it, let's play
+                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
