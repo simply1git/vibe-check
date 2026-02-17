@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-;import questionsData from '@/lib/questions.json'
-import { Copy, MessageCircle, Crown, Award, RefreshCw, Lock, ArrowLeft, Share2, Zap, User, Sparkles, Flame, Ghost, Shield, Skull, ChevronDown, ChevronUp } from 'lucide-react'
+import questionsData from '@/lib/questions.json'
+import { Copy, MessageCircle, Crown, Award, RefreshCw, Lock, ArrowLeft, Share2, Zap, User, Sparkles, Flame, Ghost, Shield, Skull, ChevronDown, ChevronUp, Download } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
@@ -12,6 +12,8 @@ import UserMenu from '@/components/UserMenu'
 import Link from 'next/link'
 import { analyzeVibe } from '@/lib/vibe-analysis'
 import VibeRadar from '@/components/VibeRadar'
+import ShareCard from '@/components/ShareCard'
+import html2canvas from 'html2canvas'
 
 // Types
 interface Member {
@@ -41,6 +43,9 @@ export default function ResultsPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [memberProfiles, setMemberProfiles] = useState<Record<string, any>>({})
+  const [currentMember, setCurrentMember] = useState<Member | null>(null)
+  const shareCardRef = useRef<HTMLDivElement>(null)
+  const [downloading, setDownloading] = useState(false)
   
   // Loading Messages
   const loadingMessages = [
@@ -78,17 +83,20 @@ export default function ResultsPage() {
       setGroupName(group.name)
       setGroupId(group.id)
 
-      // Check Admin (Casual Mode: Check if current user is admin in DB)
+      // Check Admin & Current Member
       const currentMemberId = localStorage.getItem('member_id')
       if (currentMemberId) {
-        const { data: currentMember } = await supabase
+        const { data: currentMemberData, error: currentMemberError } = await supabase
           .from('members')
-          .select('is_admin')
+          .select('*')
           .eq('id', currentMemberId)
           .single()
         
-        if (currentMember?.is_admin) {
-          setIsAdmin(true)
+        if (!currentMemberError && currentMemberData) {
+          setCurrentMember(currentMemberData)
+          if (currentMemberData.is_admin) {
+            setIsAdmin(true)
+          }
         }
       }
 
@@ -246,6 +254,31 @@ export default function ResultsPage() {
     return { leftLabel: leftOption, rightLabel: rightOption, leftPct, rightPct: 100 - leftPct, total }
   }
 
+  const handleDownloadCard = async () => {
+    if (!shareCardRef.current) return
+    setDownloading(true)
+    
+    try {
+      const canvas = await html2canvas(shareCardRef.current, {
+        backgroundColor: '#000000',
+        scale: 2, // Retina
+        useCORS: true, // For images
+        logging: false
+      })
+      
+      const image = canvas.toDataURL('image/png')
+      const link = document.createElement('a')
+      link.href = image
+      link.download = `vibe-check-${groupName.replace(/\s+/g, '-').toLowerCase()}.png`
+      link.click()
+    } catch (err) {
+      console.error('Failed to generate card:', err)
+      alert('Failed to generate image. Please try again.')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   const hasRedFlags = leaderboard.some(member => memberProfiles[member.member_id]?.['q26']?.val)
   const topThree = leaderboard.slice(0, 3)
 
@@ -283,6 +316,14 @@ export default function ResultsPage() {
 
           {/* Right: Actions Toolbar */}
           <div className="flex items-center space-x-3">
+             <button 
+                onClick={handleDownloadCard}
+                disabled={downloading}
+                className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full font-bold transition-all hover:scale-105 border border-white/10 text-sm disabled:opacity-50"
+              >
+                {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                <span className="hidden sm:inline">Card</span>
+              </button>
              <button 
                 onClick={handleShareWhatsApp}
                 className="flex items-center space-x-2 bg-[#25D366] hover:bg-[#20bd5a] text-white px-4 py-2 rounded-full font-bold transition-all hover:scale-105 shadow-lg shadow-green-900/20 text-sm"
@@ -728,6 +769,19 @@ export default function ResultsPage() {
           </div>
         </div>
       </motion.div>
+
+      {/* Hidden Share Card for Generation */}
+      <div className="absolute top-0 left-0 -z-50 opacity-0 pointer-events-none">
+        {currentMember && memberProfiles[currentMember.id] && (
+            <ShareCard
+                ref={shareCardRef}
+                groupName={groupName}
+                memberName={currentMember.display_name}
+                archetype={getArchetype(leaderboard.find(l => l.member_id === currentMember.id)?.score || 0)}
+                vibeStats={analyzeVibe(memberProfiles[currentMember.id]).stats}
+            />
+        )}
+      </div>
     </div>
   )
 }

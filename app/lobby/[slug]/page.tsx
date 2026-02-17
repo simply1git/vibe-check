@@ -21,6 +21,7 @@ export default function LobbyPage() {
   const [currentMember, setCurrentMember] = useState<any>(null)
   const [showTutorial, setShowTutorial] = useState(false)
 
+  // 1. Initial Data Fetch (Group & Members) & Polling
   useEffect(() => {
     let isMounted = true
     const controller = new AbortController()
@@ -60,7 +61,6 @@ export default function LobbyPage() {
           err.message?.includes('AbortError') ||
           err.details?.includes('AbortError')
         ) {
-          // Request aborted, ignore
           return
         }
         console.error('Error fetching group:', err)
@@ -70,7 +70,7 @@ export default function LobbyPage() {
     }
 
     fetchGroupData()
-    const interval = setInterval(fetchGroupData, 5000)
+    const interval = setInterval(fetchGroupData, 10000)
     
     return () => {
       isMounted = false
@@ -78,6 +78,47 @@ export default function LobbyPage() {
       clearInterval(interval)
     }
   }, [slug])
+
+  // 2. Realtime Subscription (Members)
+  useEffect(() => {
+    if (!group?.id) return
+
+    const channel = supabase
+      .channel(`lobby:${group.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'members',
+          filter: `group_id=eq.${group.id}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setMembers((prev) => {
+              if (prev.find(m => m.id === payload.new.id)) return prev
+              return [...prev, payload.new]
+            })
+          } else if (payload.eventType === 'UPDATE') {
+            setMembers((prev) => prev.map((m) => (m.id === payload.new.id ? payload.new : m)))
+            if (payload.new.id === currentMember?.id) {
+               setCurrentMember(payload.new)
+            }
+          } else if (payload.eventType === 'DELETE') {
+            setMembers((prev) => prev.filter((m) => m.id !== payload.old.id))
+            if (payload.old.id === currentMember?.id) {
+               alert('You have been removed from the group.')
+               router.push('/')
+            }
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [group?.id, currentMember?.id, router])
 
   const handleCopyLink = () => {
     const url = `${window.location.origin}/?join=${slug}`
