@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, UserPlus, ArrowRight, Sparkles, Trash2, Copy } from 'lucide-react'
+import { Users, UserPlus, ArrowRight, Sparkles, Trash2, Copy, RefreshCw, AlertTriangle } from 'lucide-react'
 import UserMenu from '@/components/UserMenu'
 import { cn } from '@/lib/utils'
 
@@ -20,6 +20,7 @@ export default function SetupPage() {
   const [members, setMembers] = useState<any[]>([])
   const [newMemberName, setNewMemberName] = useState('')
   const [adding, setAdding] = useState(false)
+  const [resetting, setResetting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -151,6 +152,8 @@ export default function SetupPage() {
   }
 
   const handleRemoveMember = async (memberId: string) => {
+    if (!confirm('Are you sure? This will remove the member and their answers permanently.')) return
+
     try {
       const { error } = await supabase
         .from('members')
@@ -162,6 +165,27 @@ export default function SetupPage() {
       setMembers(members.filter(m => m.id !== memberId))
     } catch (err) {
       console.error('Error removing member:', err)
+    }
+  }
+
+  const handleResetGame = async () => {
+    if (!confirm('WARNING: This will delete ALL quiz attempts and scores. This cannot be undone. Are you sure?')) return
+    
+    setResetting(true)
+    setError(null)
+
+    try {
+      const { error } = await supabase
+        .from('attempts')
+        .delete()
+        .in('guesser_id', members.map(m => m.id))
+
+      if (error) throw error
+      alert('Game scores have been reset!')
+    } catch (err: any) {
+      setError(err.message || 'Failed to reset game')
+    } finally {
+      setResetting(false)
     }
   }
 
@@ -322,6 +346,26 @@ export default function SetupPage() {
                 </motion.div>
               ))}
             </AnimatePresence>
+          </div>
+
+          {/* Danger Zone */}
+          <div className="pt-8 border-t border-red-900/20 mt-8">
+            <div className="flex items-center gap-2 mb-4">
+              <AlertTriangle className="w-4 h-4 text-red-500" />
+              <span className="text-xs font-bold text-red-500 uppercase tracking-wider">Danger Zone</span>
+            </div>
+            
+            <button
+              onClick={handleResetGame}
+              disabled={resetting}
+              className="w-full bg-red-950/30 hover:bg-red-900/50 border border-red-900/30 text-red-400 font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <RefreshCw className={cn("w-4 h-4", resetting && "animate-spin")} />
+              {resetting ? 'Resetting...' : 'Reset Game Scores'}
+            </button>
+            <p className="text-[10px] text-red-400/60 mt-2 text-center">
+              This clears all quiz answers and scores. Profiles are kept safe.
+            </p>
           </div>
 
           {/* Finish Button */}

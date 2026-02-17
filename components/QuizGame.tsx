@@ -51,6 +51,19 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit, mode =
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [isAnswering, setIsAnswering] = useState(false)
 
+  // Sound Effects
+  const playSound = (type: 'correct' | 'wrong' | 'complete') => {
+    const audio = new Audio(
+      type === 'correct' 
+        ? '/sounds/correct.mp3' 
+        : type === 'wrong' 
+          ? '/sounds/wrong.mp3' 
+          : '/sounds/complete.mp3'
+    )
+    audio.volume = 0.5
+    audio.play().catch(() => {}) // Ignore autoplay blocks
+  }
+
   // Loading Messages
   const loadingMessages = [
     "Entering The Arena...",
@@ -192,6 +205,7 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit, mode =
     // 1. Confetti if correct
     let earnedPoints = 0
     if (isCorrect) {
+      playSound('correct')
       const newStreak = streak + 1
       setStreak(newStreak)
       
@@ -215,6 +229,7 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit, mode =
         colors: ['#8b5cf6', '#d946ef', '#f472b6'] // Violet/Fuchsia/Pink
       })
     } else {
+      playSound('wrong')
       setStreak(0)
     }
 
@@ -237,6 +252,7 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit, mode =
         setSelectedOption(null)
         setIsAnswering(false)
       } else {
+        playSound('complete')
         setGameState('GAMEOVER')
         // Don't auto-redirect, let user choose
       }
