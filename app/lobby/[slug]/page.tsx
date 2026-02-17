@@ -17,7 +17,7 @@ export default function LobbyPage() {
   const [group, setGroup] = useState<any>(null)
   const [members, setMembers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [gameMode, setGameMode] = useState<'classic' | 'lightning' | null>(null)
+  const [gameMode, setGameMode] = useState<'classic' | 'lightning' | 'most_likely' | null>(null)
   const [currentMember, setCurrentMember] = useState<any>(null)
   const [showTutorial, setShowTutorial] = useState(false)
 
@@ -138,7 +138,7 @@ export default function LobbyPage() {
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
   }
 
-  const handleStartGame = (mode: 'classic' | 'lightning') => {
+  const handleStartGame = (mode: 'classic' | 'lightning' | 'most_likely') => {
     setGameMode(mode)
   }
 
@@ -269,6 +269,13 @@ export default function LobbyPage() {
                     >
                       <Zap className="w-5 h-5" />
                       <span>Lightning Round</span>
+                    </button>
+                    <button
+                      onClick={() => handleStartGame('most_likely')}
+                      className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-4 rounded-2xl flex items-center justify-center space-x-3 transition-all transform hover:scale-[1.02] shadow-xl shadow-cyan-500/20"
+                    >
+                      <Users className="w-5 h-5" />
+                      <span>Who's Most Likely?</span>
                     </button>
                     <button
                       onClick={handleProfileNavigation}

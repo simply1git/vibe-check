@@ -32,5 +32,15 @@
   { "id": "q31", "chapter": 7, "text": "Rapid Fire: Friday Night In or Out?", "friendText": "Rapid Fire: In or Out?", "options": ["In", "Out"] },
   { "id": "q32", "chapter": 7, "text": "Rapid Fire: Forgive or Forget?", "friendText": "Rapid Fire: Forgive or Forget?", "options": ["Forgive", "Forget"] },
   { "id": "q33", "chapter": 7, "text": "Rapid Fire: Plan it or Wing it?", "friendText": "Rapid Fire: Plan or Wing?", "options": ["Plan it", "Wing it"] },
-  { "id": "q34", "chapter": 7, "text": "Rapid Fire: Money or Fame?", "friendText": "Rapid Fire: Money or Fame?", "options": ["Money", "Fame"] }
+  { "id": "q34", "chapter": 7, "text": "Rapid Fire: Money or Fame?", "friendText": "Rapid Fire: Money or Fame?", "options": ["Money", "Fame"] },
+  { "id": "ml1", "chapter": 8, "text": "Who is most likely to become a millionaire by accident?", "options": [] },
+  { "id": "ml2", "chapter": 8, "text": "Who is most likely to survive a zombie apocalypse?", "options": [] },
+  { "id": "ml3", "chapter": 8, "text": "Who is most likely to cry during a movie?", "options": [] },
+  { "id": "ml4", "chapter": 8, "text": "Who is most likely to get arrested for something silly?", "options": [] },
+  { "id": "ml5", "chapter": 8, "text": "Who is most likely to forget their own birthday?", "options": [] },
+  { "id": "ml6", "chapter": 8, "text": "Who is most likely to become a famous influencer?", "options": [] },
+  { "id": "ml7", "chapter": 8, "text": "Who is most likely to live in a van?", "options": [] },
+  { "id": "ml8", "chapter": 8, "text": "Who is most likely to break a world record?", "options": [] },
+  { "id": "ml9", "chapter": 8, "text": "Who is most likely to ghost everyone and move to a new country?", "options": [] },
+  { "id": "ml10", "chapter": 8, "text": "Who is most likely to win a reality TV show?", "options": [] }
 ]

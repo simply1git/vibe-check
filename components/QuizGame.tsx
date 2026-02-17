@@ -28,16 +28,18 @@ interface QuizGameProps {
   memberId: string
   onComplete?: () => void
   onExit?: () => void
-  mode?: 'classic' | 'lightning'
+  mode?: 'classic' | 'lightning' | 'most_likely'
 }
 
 type GameState = 'SELECT' | 'PLAY' | 'GAMEOVER'
 
 export default function QuizGame({ groupId, memberId, onComplete, onExit, mode = 'classic' }: QuizGameProps) {
-  const [gameState, setGameState] = useState<GameState>(mode === 'lightning' ? 'PLAY' : 'SELECT')
+  const [gameState, setGameState] = useState<GameState>(
+    (mode === 'lightning' || mode === 'most_likely') ? 'PLAY' : 'SELECT'
+  )
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [loading, setLoading] = useState(mode === 'lightning')
+  const [loading, setLoading] = useState(mode === 'lightning' || mode === 'most_likely')
   const [score, setScore] = useState(0)
   const [streak, setStreak] = useState(0)
   const [loadingMsg, setLoadingMsg] = useState('Entering The Arena...')
@@ -51,14 +53,19 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit, mode =
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [isAnswering, setIsAnswering] = useState(false)
 
+  // Most Likely To State
+  const [mostLikelyQuestions, setMostLikelyQuestions] = useState<any[]>([])
+
   // Sound Effects
-  const playSound = (type: 'correct' | 'wrong' | 'complete') => {
+  const playSound = (type: 'correct' | 'wrong' | 'complete' | 'vote') => {
     const audio = new Audio(
       type === 'correct' 
         ? '/sounds/correct.mp3' 
         : type === 'wrong' 
           ? '/sounds/wrong.mp3' 
-          : '/sounds/complete.mp3'
+          : type === 'complete'
+            ? '/sounds/complete.mp3'
+            : '/sounds/pop.mp3' // Fallback/Vote sound
     )
     audio.volume = 0.5
     audio.play().catch(() => {}) // Ignore autoplay blocks
@@ -105,13 +112,40 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit, mode =
   const handleStartGame = useCallback(async (target: Member | 'random') => {
     setTargetMember(target)
     setLoading(true)
-    setLoadingMsg(target === 'random' ? "Summoning Random Vibes..." : `Syncing with ${target.display_name}...`)
     setScore(0)
     setStreak(0)
     setCurrentIndex(0)
     setSelectedOption(null)
 
+    if (mode === 'most_likely') {
+      const { data: allMembers } = await supabase
+        .from('members')
+        .select('display_name')
+        .eq('group_id', groupId)
+      
+      const memberOptions = (allMembers || []).map(m => m.display_name)
+      const mlQuestions = questionsData.filter(q => q.id.startsWith('ml'))
+      
+      const randomQuestions = mlQuestions
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 10)
+        .map(q => ({
+          id: q.id,
+          question_text: q.text,
+          target_member_name: 'The Group',
+          correct_option: '',
+          options: memberOptions
+        }))
+
+      setQuestions(randomQuestions)
+      setGameState('PLAY')
+      setLoading(false)
+      return
+    }
+
     try {
+      setLoadingMsg(target === 'random' ? "Summoning Random Vibes..." : `Syncing with ${target.display_name}...`)
+
       let query = supabase
         .from('quiz_questions')
         .select(`
@@ -148,7 +182,15 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit, mode =
       }
 
       // Process Questions
-      const processedQuestions: QuizQuestion[] = data.map((item: any) => {
+      const processedQuestions: QuizQuestion[] = (mode === 'most_likely') 
+        ? questionsData.filter(q => q.id.startsWith('ml')).map(q => ({
+            id: q.id,
+            question_text: q.text,
+            target_member_name: 'Group Vote',
+            correct_option: '',
+            options: [] // Filled dynamically above
+          }))
+        : data.map((item: any) => {
         const qDef = questionsData.find(q => q.id === item.question_id)
         let text = 'Unknown Question'
         const targetName = item.members?.display_name || 'Anonymous'
@@ -189,7 +231,9 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit, mode =
   }, [groupId, memberId, mode])
 
   useEffect(() => {
-    if (mode === 'lightning') {
+    if (mode === 'most_likely') {
+      handleStartGame('random') // Target doesn't matter for most_likely
+    } else if (mode === 'lightning') {
       handleStartGame('random')
     }
   }, [mode, handleStartGame])
@@ -200,6 +244,57 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit, mode =
     setSelectedOption(option)
 
     const currentQ = questions[currentIndex]
+
+    if (mode === 'most_likely') {
+      // MOST LIKELY MODE LOGIC
+      playSound('vote')
+      
+      // Save vote to profiles table
+      try {
+        // 1. Get current answers
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('answers')
+          .eq('member_id', memberId)
+          .single()
+
+        const currentAnswers = profile?.answers || {}
+        
+        // 2. Find member ID from option name (Need to fetch members again or store them)
+        // Optimization: We fetched members in handleStartGame but didn't save them to state.
+        // Let's just store the name for now as the value, it's easier.
+        // Or better: Fetch the ID map.
+        
+        const newAnswers = {
+          ...currentAnswers,
+          [currentQ.id]: { val: option, isCustom: false }
+        }
+
+        await supabase
+          .from('profiles')
+          .upsert({ 
+            member_id: memberId,
+            answers: newAnswers
+          })
+
+      } catch (err) {
+        console.error('Error saving vote:', err)
+      }
+
+      setTimeout(() => {
+        if (currentIndex < questions.length - 1) {
+          setCurrentIndex(prev => prev + 1)
+          setSelectedOption(null)
+          setIsAnswering(false)
+        } else {
+          playSound('complete')
+          setGameState('GAMEOVER')
+        }
+      }, 800)
+      return
+    }
+
+    // CLASSIC / LIGHTNING LOGIC
     const isCorrect = option === currentQ.correct_option
 
     // 1. Confetti if correct
