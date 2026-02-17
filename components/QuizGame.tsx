@@ -192,7 +192,8 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit, mode =
       // Process Questions
       let processedQuestions: QuizQuestion[] = []
       
-      if (mode === 'most_likely') {
+      const currentMode = mode as string
+      if (currentMode === 'most_likely') {
         processedQuestions = questionsData
           .filter(q => q.id.startsWith('ml'))
           .map(q => ({

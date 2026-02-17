@@ -19,9 +19,10 @@ interface VibeProfile {
 
 // Helper: Get option index (0-3) for a given answer value
 function getOptionIndex(qId: string, answerVal: string): number {
+  if (!answerVal) return -1;
   const q = questions.find(q => q.id === qId);
   if (!q || !q.options) return -1;
-  return q.options.indexOf(answerVal);
+  return q.options.indexOf(answerVal as never);
 }
 
 export function analyzeVibe(answers: AnswerMap): VibeProfile {
