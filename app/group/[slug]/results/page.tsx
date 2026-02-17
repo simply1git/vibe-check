@@ -444,46 +444,6 @@ export default function ResultsPage() {
              </div>
           </div>
 
-          {/* Red Flag Parade */}
-          <div className="max-w-7xl mx-auto w-full px-4 overflow-hidden">
-             <div className="flex items-center justify-center mb-8">
-               <div className="h-[1px] w-12 bg-white/20 mr-4" />
-               <h2 className="text-2xl font-black uppercase tracking-widest text-red-400/80 flex items-center gap-2">
-                 🚩 The Red Flag Parade
-               </h2>
-               <div className="h-[1px] w-12 bg-white/20 ml-4" />
-             </div>
-             
-             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x">
-                {!hasRedFlags && (
-                  <div className="w-full bg-white/5 border border-white/10 rounded-xl p-6 text-center text-white/60">
-                    No red flags yet. Complete Chapter 6 to reveal the chaos.
-                  </div>
-                )}
-                {leaderboard.map((member) => {
-                  const answers = memberProfiles[member.member_id]
-                  const toxicTrait = answers?.['q26']?.val
-                  if (!toxicTrait) return null
-
-                  return (
-                    <div key={member.member_id} className="snap-center shrink-0 w-64 bg-red-900/10 border border-red-500/20 rounded-xl p-4 flex flex-col items-center text-center relative overflow-hidden group">
-                       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                       <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-red-500/30 mb-3 bg-black/50">
-                          <img 
-                             src={`https://api.dicebear.com/9.x/notionists/svg?seed=${member.avatar_seed}`}
-                             alt={member.display_name}
-                             className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
-                           />
-                       </div>
-                       <h3 className="font-bold text-red-200 mb-1">{member.display_name}</h3>
-                       <p className="text-xs text-red-400/60 font-bold uppercase tracking-widest mb-2">is toxic because...</p>
-                       <p className="text-sm text-white/80 italic">"{toxicTrait}"</p>
-                    </div>
-                  )
-                })}
-             </div>
-          </div>
-
           {/* Squad Archetypes */}
           <div className="max-w-7xl mx-auto w-full px-4">
             <div className="flex items-center justify-center mb-8">
@@ -538,13 +498,13 @@ export default function ResultsPage() {
                   },
                   {
                     id: 'villain',
-                    title: 'The Villain',
+                    title: 'The Mastermind',
                     icon: Skull,
-                    description: 'Actually scary.',
+                    description: 'Always three steps ahead.',
                     color: 'text-purple-400',
                     bgColor: 'bg-purple-500/10',
                     borderColor: 'border-purple-500/20',
-                    condition: (a: any) => a?.q29?.val === 'Sacrifice the slow ones' || a?.q27?.val === 'The Killer'
+                    condition: (a: any) => a?.q29?.val === 'Sacrifice the slow ones' || a?.q27?.val === 'The Survivor'
                   }
                 ].map((archetype) => {
                   const members = leaderboard.filter(m => {
@@ -744,7 +704,7 @@ export default function ResultsPage() {
                                    
                                    {vibe.toxicTrait && (
                                      <div>
-                                        <div className="text-xs font-bold uppercase tracking-widest text-white/40 mb-1">Toxic Trait</div>
+                                        <div className="text-xs font-bold uppercase tracking-widest text-white/40 mb-1">Signature Quirk</div>
                                         <div className="text-sm text-white/80 italic">"{vibe.toxicTrait}"</div>
                                      </div>
                                    )}

@@ -89,24 +89,32 @@ export default function QuizGame({ groupId, memberId, onComplete, onExit, mode =
   // 1. Fetch Available Members on Mount
   useEffect(() => {
     const fetchMembers = async () => {
-      setLoading(true)
-      try {
-        const { data, error } = await supabase
-          .from('members')
-          .select('id, display_name, avatar_seed')
-          .eq('group_id', groupId)
-          .neq('id', memberId) // Exclude self
-        
-        if (error) throw error
-        setAvailableMembers(data || [])
-      } catch (err) {
-        console.error('Error fetching members:', err)
-      } finally {
-        setLoading(false)
+      // Only fetch members if in 'classic' mode where selection is needed
+      if (mode === 'classic') {
+        setLoading(true)
+        try {
+          const { data, error } = await supabase
+            .from('members')
+            .select('id, display_name, avatar_seed')
+            .eq('group_id', groupId)
+            .neq('id', memberId) // Exclude self
+          
+          if (error) throw error
+          setAvailableMembers(data || [])
+        } catch (err) {
+          console.error('Error fetching members:', err)
+        } finally {
+          setLoading(false)
+        }
+      } else {
+        // For other modes, we might start loading immediately or wait for handleStartGame
+        // But since we initialize loading state based on mode, we can just set it to false if needed
+        // Actually, for lightning/most_likely, we call handleStartGame immediately in another useEffect
+        // So we don't need to do anything here except maybe ensure loading is handled there.
       }
     }
     fetchMembers()
-  }, [groupId, memberId])
+  }, [groupId, memberId, mode])
 
   // 2. Start Game Logic
   const handleStartGame = useCallback(async (target: Member | 'random') => {
